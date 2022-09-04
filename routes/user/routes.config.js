@@ -1,5 +1,6 @@
-const { creatNewUser } = require('./controllers/user.controller');
+const { creatNewUser, findByCredentials } = require('./controllers/user.controller');
 
 exports.routesConfig = function (app) {
-  app.post('/users/signup', [creatNewUser]);
+  app.post('/auth/signup', [creatNewUser]);
+  app.post('/auth', [findByCredentials]);
 }
