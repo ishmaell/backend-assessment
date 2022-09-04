@@ -1,6 +1,7 @@
-const { creatNewUser, findByCredentials } = require('./controllers/user.controller');
+const { handleSignup, handleLogin, handleRefreshToken } = require('./controllers/user.controller');
 
 exports.routesConfig = function (app) {
-  app.post('/auth/signup', [creatNewUser]);
-  app.post('/auth', [findByCredentials]);
+  app.post('/auth/signup', [handleSignup]);
+  app.post('/auth', [handleLogin]);
+  app.get('/refresh', [handleRefreshToken]);
 }

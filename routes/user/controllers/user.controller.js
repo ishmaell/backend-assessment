@@ -9,7 +9,7 @@ const usersDB = {
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
-const creatNewUser = async (req, res) => {
+const handleSignup = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) return res.status(400).json({ "message": "Email and password is required" });
 
@@ -32,7 +32,7 @@ const creatNewUser = async (req, res) => {
   }
 }
 
-const findByCredentials = async (req, res) => {
+const handleLogin = async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) return res.status(400).json({ "message": "Email and password are required" });
@@ -63,8 +63,9 @@ const findByCredentials = async (req, res) => {
       path.join(__dirname, '..', '..', '..', 'model', 'users.json'),
       JSON.stringify(usersDB.users)
     )
-    res.json({ accessToken });
     res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+    res.json({ accessToken });
+
   } else {
     res.sendStatus(401);
   }
@@ -80,11 +81,39 @@ const findByCredentials = async (req, res) => {
 
     res.status(201).json({ "success": `New user ${email} created` })
   } catch (error) {
-    res.status(500).send({ "message": error });
+    // res.status(500).send({ "message": error });
   }
 }
 
+const handleRefreshToken = (req, res) => {
+  const cookies = req.cookies;
+  if (!cookies?.jwt) return res.status(401); // unathorized
+
+  console.log(cookies.jwt);
+
+  const refreshToken = cookies.jwt;
+
+  const foundUser = usersDB.users.find(user => user.refreshToken === refreshToken);
+  if (!foundUser) return res.status(403); // forbidden
+
+  // evaluate jwt
+  jwt.verify(
+    refreshToken,
+    process.env.REFRESH_TOKEN_SECRET,
+    (err, decoded) => {
+      if (err || foundUser.email !== decoded.email) return res.sendStatus(403);
+      const accessToken = jwt.sign(
+        { "email": decoded.email },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: '30s' }
+      );
+      res.status(200).json({ accessToken })
+    }
+  );
+}
+
 module.exports = {
-  creatNewUser,
-  findByCredentials
+  handleSignup,
+  handleLogin,
+  handleRefreshToken
 }

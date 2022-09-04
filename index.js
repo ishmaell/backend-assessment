@@ -1,6 +1,7 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const corsOptions = require('./config/corsOptions');
 
 const PORT = process.env.PORT || 8800;
@@ -13,6 +14,9 @@ app.use(cors(corsOptions));
 
 // built-in middleware for json
 app.use(express.json());
+
+// middleware for cookies
+app.use(cookieParser());
 
 // route config
 UserRouter.routesConfig(app);
