@@ -5,11 +5,17 @@ const corsOptions = require('./config/corsOptions');
 
 const PORT = process.env.PORT || 8800;
 
+// routers
+const UserRouter = require('./routes/user/routes.config');
+
 // middleware for Cross Origin Resource sharing
 app.use(cors(corsOptions));
 
 // built-in middleware for json
 app.use(express.json());
+
+// route config
+UserRouter.routesConfig(app);
 
 // 404
 app.use((_, res) => {
