@@ -72,7 +72,7 @@ const handleLogin = async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = { "email": email, "passowrd": hashedPassword };
+    const newUser = { "email": email, "password ": hashedPassword };
     usersDB.setUsers([...usersDB.users, newUser]);
     await fsPromises.writeFile(
       path.join(__dirname, '..', '..', '..', 'model', 'users.json'),
@@ -88,8 +88,6 @@ const handleLogin = async (req, res) => {
 const handleRefreshToken = (req, res) => {
   const cookies = req.cookies;
   if (!cookies?.jwt) return res.status(401); // unathorized
-
-  console.log(cookies.jwt);
 
   const refreshToken = cookies.jwt;
 
@@ -112,8 +110,37 @@ const handleRefreshToken = (req, res) => {
   );
 }
 
+const handleLogout = async (req, res) => {
+
+  const cookies = req.cookies;
+  if (!cookies?.jwt) return res.status(204); // no content
+  console.log(cookies);
+
+  const refreshToken = cookies.jwt;
+  // check if refreshToken is in db
+  const foundUser = usersDB.users.find(user => user.refreshToken === refreshToken);
+
+  if (!foundUser) {
+    res.clearCookie('jwt', { httpOnly: true });
+    return res.status(204);
+  }
+
+  // delete refreshToken from db
+  const otherUsers = usersDB.users.filter(user => user.refreshToken !== foundUser.refreshToken);
+  const currentUser = { ...foundUser, refreshToken: '' };
+  usersDB.setUsers([...otherUsers, currentUser]);
+  await fsPromises.writeFile(
+    path.join(__dirname, '..', '..', '..', 'model', 'users.json'),
+    JSON.stringify(usersDB.users)
+  );
+
+  res.clearCookie('jwt', { httpOnly: true });
+  res.status(204);
+}
+
 module.exports = {
   handleSignup,
   handleLogin,
-  handleRefreshToken
+  handleRefreshToken,
+  handleLogout
 }
