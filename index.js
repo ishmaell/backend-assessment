@@ -3,14 +3,19 @@ const app = express();
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const corsOptions = require('./config/corsOptions');
+const credentials = require('./middleware/credentials');
 
 const PORT = process.env.PORT || 8800;
 
 // routers
 const UserRouter = require('./routes/user/routes.config');
 
+// handle options credentials check - before CORS and fetch cookies credentials requirement
+app.use(credentials);
+
 // middleware for Cross Origin Resource sharing
 app.use(cors(corsOptions));
+
 
 // built-in middleware for json
 app.use(express.json());

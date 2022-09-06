@@ -10,8 +10,11 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const handleSignup = async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ "message": "Email and password is required" });
+  const { firstName, lastName, email, password } = req.body;
+  if (!firstName) return res.status(400).json({ "message": "First name is required" });
+  if (!lastName) return res.status(400).json({ "message": "First name is required" });
+  if (!email) return res.status(400).json({ "message": "Email is required" });
+  if (!password) return res.status(400).json({ "message": "Password is required" });
 
   // check for duplicate emails in the db
   const duplicate = usersDB.users.find(user => user.email === email);
@@ -19,7 +22,7 @@ const handleSignup = async (req, res) => {
 
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = { "email": email, "password": hashedPassword };
+    const newUser = { firstName, lastName, email, "password": hashedPassword };
     usersDB.setUsers([...usersDB.users, newUser]);
     await fsPromises.writeFile(
       path.join(__dirname, '..', '..', '..', 'model', 'users.json'),
@@ -39,49 +42,40 @@ const handleLogin = async (req, res) => {
 
   // check for duplicate emails in the db
   const foundUser = usersDB.users.find(user => user.email === email);
-  if (!foundUser) return res.status(401).json({ "error": "Invalid credentials" }); // unauthorized
-
-  const matchPassword = await bcrypt.compare(password, foundUser.password);
-
-  if (matchPassword) {
-    // create JWT
-    const accessToken = jwt.sign(
-      { "email": foundUser.email },
-      process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: '10m' }
-    );
-    const refreshToken = jwt.sign(
-      { "email": foundUser.email },
-      process.env.REFRESH_TOKEN_SECRET,
-      { expiresIn: '50m' }
-    );
-    // Saving refreshToken with current user
-    const otherUsers = usersDB.users.filter(user => user.email !== foundUser.email);
-    const currentUser = { ...foundUser, refreshToken };
-    usersDB.setUsers([...otherUsers, currentUser]);
-    await fsPromises.writeFile(
-      path.join(__dirname, '..', '..', '..', 'model', 'users.json'),
-      JSON.stringify(usersDB.users)
-    )
-    res.cookie('jwt', refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
-    res.json({ accessToken });
-
-  } else {
-    res.sendStatus(401);
-  }
+  if (!foundUser) return res.status(401).json({ "error": "Invalid login credentials" }); // unauthorized
 
   try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = { "email": email, "password ": hashedPassword };
-    usersDB.setUsers([...usersDB.users, newUser]);
-    await fsPromises.writeFile(
-      path.join(__dirname, '..', '..', '..', 'model', 'users.json'),
-      JSON.stringify(usersDB.users)
-    );
+    const matchPassword = await bcrypt.compare(password, foundUser.password);
 
-    res.status(201).json({ "success": `New user ${email} created` })
+    if (matchPassword) {
+      // create JWT
+      const accessToken = jwt.sign(
+        { "email": foundUser.email },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: '10m' }
+      );
+      const refreshToken = jwt.sign(
+        { "email": foundUser.email },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: '50m' }
+      );
+      // Saving refreshToken with current user
+      const otherUsers = usersDB.users.filter(user => user.email !== foundUser.email);
+      const currentUser = { ...foundUser, refreshToken };
+
+      usersDB.setUsers([...otherUsers, currentUser]);
+      await fsPromises.writeFile(
+        path.join(__dirname, '..', '..', '..', 'model', 'users.json'),
+        JSON.stringify(usersDB.users)
+      )
+      res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 });
+      res.json({ firstName: foundUser.firstName, lastName: foundUser.lastName, email: foundUser.email, accessToken });
+    } else {
+      res.sendStatus(401);
+    }
+
   } catch (error) {
-    // res.status(500).send({ "message": error });
+    res.status(500).send({ "message": error });
   }
 }
 
@@ -114,7 +108,6 @@ const handleLogout = async (req, res) => {
 
   const cookies = req.cookies;
   if (!cookies?.jwt) return res.status(204); // no content
-  console.log(cookies);
 
   const refreshToken = cookies.jwt;
   // check if refreshToken is in db
@@ -134,7 +127,7 @@ const handleLogout = async (req, res) => {
     JSON.stringify(usersDB.users)
   );
 
-  res.clearCookie('jwt', { httpOnly: true });
+  res.clearCookie('jwt', { httpOnly: true, sameSite: 'None', secure: true, });
   res.status(204);
 }
 
