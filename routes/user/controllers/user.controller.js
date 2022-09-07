@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 
 const insert = async (req, res) => {
   try {
-    const { firstName, lastName, email, hasLinkedAccount } = await UserModel.insert(req.body);
+    const { _id, firstName, lastName, email, hasLinkedAccount } = await UserModel.insert(req.body);
 
     // create JWT
     const accessToken = jwt.sign(
@@ -20,7 +20,7 @@ const insert = async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET,
       { expiresIn: '50m' }
     );
-
+    await UserModel.updateRefreshToken({ _id, refreshToken });
     res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 });
     res.status(201).json({ firstName, lastName, email, hasLinkedAccount, accessToken });
 
@@ -37,7 +37,7 @@ const insert = async (req, res) => {
 
 const findByCredentials = async (req, res) => {
   try {
-    const { firstName, lastName, email, hasLinkedAccount } = await UserModel.findByCredentials(req.body.email, req.body.password);
+    const { _id, firstName, lastName, email, hasLinkedAccount } = await UserModel.findByCredentials(req.body.email, req.body.password);
 
     // create JWT
     const accessToken = jwt.sign(
@@ -50,7 +50,7 @@ const findByCredentials = async (req, res) => {
       process.env.REFRESH_TOKEN_SECRET,
       { expiresIn: '50m' }
     );
-
+    await UserModel.updateRefreshToken({ _id, refreshToken });
     res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 });
     res.status(200).json({ firstName, lastName, email, hasLinkedAccount, accessToken });
   } catch (error) {
@@ -59,14 +59,17 @@ const findByCredentials = async (req, res) => {
 }
 
 
-const refresh = (req, res) => {
-  const cookies = req.cookies;
-  if (!cookies?.jwt) return res.status(401); // unathorized
+const refresh = async (req, res) => {
 
+  const cookies = req.cookies;
+  if (!cookies.jwt) return res.sendStatus(401); // unathorized
+  console.log('Yazo nan')
   const refreshToken = cookies.jwt;
 
-  const foundUser = await UserModel.findByRefreshToken(refreshToken); //usersDB.users.find(user => user.refreshToken === refreshToken);
-  if (!foundUser) return res.status(403); // forbidden
+
+  const foundUser = await UserModel.findByRefreshToken({ refreshToken });
+
+  if (!foundUser) return res.sendStatus(403); // forbidden
 
   // evaluate jwt
   jwt.verify(
@@ -77,7 +80,7 @@ const refresh = (req, res) => {
       const accessToken = jwt.sign(
         { "email": decoded.email },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: '30s' }
+        { expiresIn: '10m' }
       );
       res.status(200).json({ accessToken })
     }

@@ -46,6 +46,7 @@ const saveLinkedAccount = async (req, res) => {
     };
 
     const response = await axios(config);
+
     const accountObj = {};
     accountObj['accountHolder'] = email;
     accountObj['accountName'] = response.data.account.name;
