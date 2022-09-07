@@ -7,7 +7,7 @@ const jwt = require('jsonwebtoken');
 
 const insert = async (req, res) => {
   try {
-    const { firstName, lastName, email } = await UserModel.insert(req.body);
+    const { firstName, lastName, email, hasLinkedAccount } = await UserModel.insert(req.body);
 
     // create JWT
     const accessToken = jwt.sign(
@@ -22,7 +22,7 @@ const insert = async (req, res) => {
     );
 
     res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 });
-    res.status(201).json({ firstName, lastName, email, accessToken });
+    res.status(201).json({ firstName, lastName, email, hasLinkedAccount, accessToken });
 
   } catch (error) {
     let errorMessage = error.message;
@@ -37,7 +37,7 @@ const insert = async (req, res) => {
 
 const findByCredentials = async (req, res) => {
   try {
-    const { firstName, lastName, email } = await UserModel.findByCredentials(req.body.email, req.body.password);
+    const { firstName, lastName, email, hasLinkedAccount } = await UserModel.findByCredentials(req.body.email, req.body.password);
 
     // create JWT
     const accessToken = jwt.sign(
@@ -52,7 +52,7 @@ const findByCredentials = async (req, res) => {
     );
 
     res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 });
-    res.status(200).json({ firstName, lastName, email, accessToken });
+    res.status(200).json({ firstName, lastName, email, hasLinkedAccount, accessToken });
   } catch (error) {
     res.status(400).send({ message: error.message });
   }

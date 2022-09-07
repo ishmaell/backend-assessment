@@ -39,10 +39,20 @@ const userSchema = new Schema({
       }
     }
   },
+  hasLinkedAccount: {
+    type: Boolean,
+    default: false
+  },
   refreshToken: {
     type: String,
   },
 }, { timestamps: true });
+
+userSchema.virtual('userAccounts', {
+  ref: 'accounts',
+  localField: 'email',
+  foreignField: 'accountHolder'
+})
 
 
 userSchema.methods.toJSON = function () {
@@ -80,6 +90,10 @@ exports.insert = data => {
 exports.findByEmail = (email) => {
   return User.findOne({ email: email });
 };
+
+exports.updateHasLinkedAccount = ({ _id, hasLinkedAccount }) => {
+  return User.findByIdAndUpdate(_id, { hasLinkedAccount }, { 'useFindAndModify': false });
+}
 
 exports.findByCredentials = async (email, password) => {
 

@@ -10,6 +10,7 @@ const PORT = process.env.PORT || 8800;
 
 // routers
 const UserRouter = require('./routes/user/routes.config');
+const AccountRouter = require('./routes/account/route.config');
 
 // handle options credentials check - before CORS and fetch cookies credentials requirement
 app.use(credentials);
@@ -26,6 +27,7 @@ app.use(cookieParser());
 
 // route config
 UserRouter.routesConfig(app);
+AccountRouter.routesConfig(app);
 
 // 404
 app.use((_, res) => {
