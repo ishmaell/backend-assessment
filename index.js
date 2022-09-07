@@ -12,18 +12,21 @@ const PORT = process.env.PORT || 8800;
 const UserRouter = require('./routes/user/routes.config');
 const AccountRouter = require('./routes/account/route.config');
 
+// middleware for cookies
+app.use(cookieParser());
+
 // handle options credentials check - before CORS and fetch cookies credentials requirement
 app.use(credentials);
 
 // middleware for Cross Origin Resource sharing
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 
 // built-in middleware for json
 app.use(express.json());
 
-// middleware for cookies
-app.use(cookieParser());
+
 
 // route config
 UserRouter.routesConfig(app);

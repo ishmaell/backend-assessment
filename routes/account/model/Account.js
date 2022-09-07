@@ -25,7 +25,6 @@ const accountSchema = new Schema({
   },
   bvn: {
     type: String,
-    required: true,
   },
   bankName: {
     type: String,
