@@ -54,7 +54,7 @@ const findByCredentials = async (req, res) => {
     res.cookie('jwt', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 });
     res.status(200).json({ firstName, lastName, email, hasLinkedAccount, accessToken });
   } catch (error) {
-    res.status(400).send({ message: error.message });
+    res.status(401).send({ message: error.message });
   }
 }
 
