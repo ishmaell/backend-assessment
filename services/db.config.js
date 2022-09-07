@@ -1,4 +1,4 @@
 exports.dbConfig = function () {
-  let dbURL = 'mongodb+srv://rootuser:pa55word@cluster0.3f9guoy.mongodb.net/MonoDB?retryWrites=true&w=majority';
+  let dbURL = process.env.MONGO_DB_URI;
   return dbURL;
 }

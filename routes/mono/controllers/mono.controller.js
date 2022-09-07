@@ -1,8 +1,5 @@
 const mongoose = require('../../../services/mongoose.service').mongoose;
-const UserModel = require('../model/User');
-
-
-const jwt = require('jsonwebtoken');
+const MonoModel = require('../model/Mono');
 
 
 const insert = async (req, res) => {
