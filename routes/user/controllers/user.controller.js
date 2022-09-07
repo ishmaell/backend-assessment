@@ -59,30 +59,30 @@ const findByCredentials = async (req, res) => {
 }
 
 
-// const handleRefreshToken = (req, res) => {
-//   const cookies = req.cookies;
-//   if (!cookies?.jwt) return res.status(401); // unathorized
+const refresh = (req, res) => {
+  const cookies = req.cookies;
+  if (!cookies?.jwt) return res.status(401); // unathorized
 
-//   const refreshToken = cookies.jwt;
+  const refreshToken = cookies.jwt;
 
-//   const foundUser = usersDB.users.find(user => user.refreshToken === refreshToken);
-//   if (!foundUser) return res.status(403); // forbidden
+  const foundUser = await UserModel.findByRefreshToken(refreshToken); //usersDB.users.find(user => user.refreshToken === refreshToken);
+  if (!foundUser) return res.status(403); // forbidden
 
-//   // evaluate jwt
-//   jwt.verify(
-//     refreshToken,
-//     process.env.REFRESH_TOKEN_SECRET,
-//     (err, decoded) => {
-//       if (err || foundUser.email !== decoded.email) return res.sendStatus(403);
-//       const accessToken = jwt.sign(
-//         { "email": decoded.email },
-//         process.env.ACCESS_TOKEN_SECRET,
-//         { expiresIn: '30s' }
-//       );
-//       res.status(200).json({ accessToken })
-//     }
-//   );
-// }
+  // evaluate jwt
+  jwt.verify(
+    refreshToken,
+    process.env.REFRESH_TOKEN_SECRET,
+    (err, decoded) => {
+      if (err || foundUser.email !== decoded.email) return res.sendStatus(403);
+      const accessToken = jwt.sign(
+        { "email": decoded.email },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: '30s' }
+      );
+      res.status(200).json({ accessToken })
+    }
+  );
+}
 
 // const handleLogout = async (req, res) => {
 
@@ -113,5 +113,6 @@ const findByCredentials = async (req, res) => {
 
 module.exports = {
   insert,
-  findByCredentials
+  findByCredentials,
+  refresh
 }

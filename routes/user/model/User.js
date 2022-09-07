@@ -91,6 +91,10 @@ exports.findByEmail = (email) => {
   return User.findOne({ email: email });
 };
 
+exports.findByRefreshToken = (refreshToken) => {
+  return User.findOne({ refreshToken });
+};
+
 exports.updateHasLinkedAccount = ({ _id, hasLinkedAccount }) => {
   return User.findByIdAndUpdate(_id, { hasLinkedAccount }, { 'useFindAndModify': false });
 }
